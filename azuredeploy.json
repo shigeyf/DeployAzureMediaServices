@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters" : {
+    "mediaServicesAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Media Services Account Name"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage Account Name"
+      }
+    },
+    "storageOption": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_RAGRS"
+      ],
+      "metadata": {
+        "description": "Describes storage replication/redunduncy options. Check details at https://azure.microsoft.com/en-us/pricing/details/storage/"
+      }
+    }
+  },  
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccountName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[parameters('storageOption')]"
+      }
+    },
+    {
+      "type": "Microsoft.Media/mediaServices",
+      "name": "[parameters('mediaServicesAccountName')]",
+      "apiVersion": "2015-10-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+          "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+      ],
+      "properties":{
+          "storageAccounts": [
+              {
+                  "id": "[concat(resourceGroup().id, '/providers/Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+                  "isPrimary": true
+              }
+          ]
+      }
+    }
+  ]
+}
